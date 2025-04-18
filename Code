@@ -27,21 +27,18 @@ due_date_str = input("Enter rent due date (YYYY-MM-DD): ")
 message_body = f"Hello {name}, your rent share is ₹{per_person_amount:.2f}. Please pay before {due_date_str} to avoid late fees."
 
 try:
-    # Parse the due date
+    
     due_date = datetime.strptime(due_date_str, "%Y-%m-%d")
     reminder_date = due_date - timedelta(days=3)  # Send reminder 3 days before the due date
     current_datetime = datetime.now()
 
-    # Calculate time difference
     time_difference = (reminder_date - current_datetime).total_seconds()
 
     if time_difference <= 0:
         print("The specified time is in the past. Sending message immediately.")
-        # Send message immediately
         client.messages.create(from_=whatsapp_sender, body=message_body, to=f"whatsapp:{recipient_number}")
     else:
         print(f"Message scheduled to be sent to {name} on {reminder_date.strftime('%Y-%m-%d %H:%M')}.")
-        # Wait until the reminder date and then send the message
         time.sleep(time_difference)
         client.messages.create(from_=whatsapp_sender, body=message_body, to=f"whatsapp:{recipient_number}")
 
