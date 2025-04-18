@@ -1,0 +1,53 @@
+from twilio.rest import Client
+from datetime import datetime, timedelta
+import time
+
+account_sid = "YOUR_ACCOUNT_SID"
+auth_token = "YOUR_AUTH_TOKEN"
+whatsapp_sender = "whatsapp:+14155666666" 
+
+
+client = Client(account_sid, auth_token)
+
+rent = int(input("Enter your hostel/room rent: "))
+food = int(input("Enter the total amount of food ordered: "))
+electricity_bill = int(input("Enter the total electricity bill: "))
+charge_per_unit = int(input("Enter charge per unit: "))
+total_person = int(input("Enter the total number of persons: "))
+
+total_electricity_bill = electricity_bill * charge_per_unit
+per_person_amount = (food + rent + total_electricity_bill) / total_person
+
+print(f"Each person should pay: ₹{per_person_amount:.2f}")
+
+name = input("Enter the recipient's name: ")
+recipient_number = input("Enter recipient's number with country code (e.g., +91XXXXXXXXXX): ")
+due_date_str = input("Enter rent due date (YYYY-MM-DD): ")
+
+message_body = f"Hello {name}, your rent share is ₹{per_person_amount:.2f}. Please pay before {due_date_str} to avoid late fees."
+
+try:
+    # Parse the due date
+    due_date = datetime.strptime(due_date_str, "%Y-%m-%d")
+    reminder_date = due_date - timedelta(days=3)  # Send reminder 3 days before the due date
+    current_datetime = datetime.now()
+
+    # Calculate time difference
+    time_difference = (reminder_date - current_datetime).total_seconds()
+
+    if time_difference <= 0:
+        print("The specified time is in the past. Sending message immediately.")
+        # Send message immediately
+        client.messages.create(from_=whatsapp_sender, body=message_body, to=f"whatsapp:{recipient_number}")
+    else:
+        print(f"Message scheduled to be sent to {name} on {reminder_date.strftime('%Y-%m-%d %H:%M')}.")
+        # Wait until the reminder date and then send the message
+        time.sleep(time_difference)
+        client.messages.create(from_=whatsapp_sender, body=message_body, to=f"whatsapp:{recipient_number}")
+
+    print("WhatsApp reminder sent successfully!")
+
+except ValueError:
+    print("Invalid date format. Please enter in YYYY-MM-DD format.")
+except Exception as e:
+    print(f"Error: {str(e)}")
